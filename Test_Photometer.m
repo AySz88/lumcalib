@@ -3,6 +3,10 @@ function [  ] = Test_Photometer( port )
 %   Creates a connection to the PR-524, and reads its serial number
 % By Alexander Yuan, April 2014
     caughtException = [];
+    
+    if nargin < 1 || isempty(port)
+        port = FindPortOf('PR Instrument');
+    end
 
     delete(instrfind()); % kludge in case of conflicts?
 
@@ -21,6 +25,7 @@ end
 function meter = open(port)
     meter = serial(port);
     
+    % Communication Settings:
     % For some reason, the meter wants to be sent just one character at a
     % time, so don't let MATLAB send CR/LF to the device.  Reading is fine
     % though, since MATLAB will buffer the CR/LF.  The device doesn't seem
@@ -51,7 +56,7 @@ function send(meter, cmd)
     % Must send one character at a time :(
     
     % Make sure the command ends with CR/LF
-    if length(cmd)>2 && ~strcmpi(cmd(end-1:end), sprintf('\r\n'))
+    if length(cmd) < 2 || ~strcmpi(cmd(end-1:end), sprintf('\r\n'))
         cmd = sprintf('%s\r\n', strtrim(cmd));
     end
     
@@ -69,6 +74,7 @@ function varargout = sendAndRead(meter, cmd, format, pauseTime)
     if nargin < 4
         pauseTime = 0.1;
         % TODO maybe: if strcmpi(cmd(1), 'M'); pauseTime = 2.0; end;
+        % or a "wait for data" flag that does the fscanf without checking for data?
     end
     
     varargout = cell(1, nargout);
