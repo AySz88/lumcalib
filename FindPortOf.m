@@ -21,6 +21,11 @@ patternForCOM = '^    FriendlyName    REG_SZ    (.*?COM.*?)$';
 %patternForCOM = '^    FriendlyName    REG_SZ    (.*?)$';
 deviceStrings = regexp(usbEnum, patternForCOM, 'tokens', 'dotexceptnewline', 'lineanchors');
 
+if isempty(deviceStrings)
+    port = [];
+    return;
+end
+
 % Parse the device names and port numbers
 devices = regexp([deviceStrings{:}], '(.*) \((COM[\d*])\)', 'tokens');
 for devIdx = 1:length(devices)

@@ -47,20 +47,19 @@ classdef PR524 < serial
                 cmd = sprintf('%s\r\n', strtrim(cmd));
             end
 
-            %fprintf('Sending %s...\n', strtrim(cmd));
-
             for idx = 1:length(cmd)
                 fprintf(meter, cmd(idx));
             end
         end
 
         function varargout = sendAndRead(meter, cmd, format, pauseTime)
-            if nargin < 3
+            % Output is same as Instrument Control Toolbox's fscanf
+            if nargin < 3 || isempty(format)
                 format = '%s'; % discards the CR/LF terminator
             end
-            if nargin < 4
+            if nargin < 4 || isempty(pauseTime)
                 pauseTime = 0.1;
-                % TODO maybe: if strcmpi(cmd(1), 'M'); pauseTime = 2.0; end;
+                % TODO maybe: if strcmpi(cmd(1), 'M'); pauseTime = 4.0; end;
                 % or a "wait for data" flag that does the fscanf without checking for data?
             end
 
@@ -68,8 +67,7 @@ classdef PR524 < serial
 
             meter.send(cmd);
             pause(pauseTime);
-
-            %fprintf('About to read %i bytes...', meter.BytesAvailable);
+            
             if get(meter, 'BytesAvailable') > 0
                 [varargout{:}] = fscanf(meter, format);
             else

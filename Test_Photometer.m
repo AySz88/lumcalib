@@ -8,8 +8,9 @@ function [  ] = Test_Photometer()
 
     meter = PR524();
     try
-        [~, sn] = sendAndRead(meter, 'D110', '%i,%i'); % read serial number
-        fprintf('Requested serial number: %i\n', sn);
+        data = sendAndRead(meter, 'D110', '%i,%i'); % read serial number
+        sn = data(2);
+        fprintf('This PR-524''s serial number is: %i\n', sn);
     catch e
         caughtException = e;
     end
