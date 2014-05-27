@@ -1,12 +1,13 @@
 function [ table ] = CreateCalibTable( vals )
-%CREATECALIBTABLE Summary of this function goes here
+%CREATECALIBTABLE Auto-measures luminance at a range of displayed values
 %   Detailed explanation goes here
 if nargin<1
     vals = 0:5:255;
 end
 
-refreshRate = 120;
-%exposureTime = 500; % ms, up to 500? Manual says microseconds, but seems wrong
+% Either an LCD backlight's strobe rate or a CRT's actual refresh rate
+% Usually a multiple of 60 and/or the refresh rate; use [] for auto-sync
+strobeRate = [];
 
 caughtException = [];
 
@@ -26,14 +27,20 @@ try
         HW.winPtr, 0); % Just to get something in HW.winPtr
     HW = ScreenCustomStereo(HW, 'Flip', HW.winPtr); % initial flip
     
-    % user-defined sync to any strobing backlight ('source frequency')
-    % set source freq to multiple of 60 (preferably refresh rate)
-    [~] = sendAndRead(meter, 'SS3');
-    [~] = sendAndRead(meter, sprintf('SK%i', refreshRate));
+    % Set sync settings
+    if isempty(strobeRate)
+        % Use auto-sync
+        
+        % HACK For some reason actually sending the command causes problems
+        % so just don't specify (defaults to auto-sync)
+        %[~] = sendAndRead(meter, 'SS1');
+    else
+        % Manually set sync frequency
+        [~] = sendAndRead(meter, 'SS3');
+        [~] = sendAndRead(meter, sprintf('SK%i', strobeRate));
+    end
     
-    %[~] = sendAndRead(meter, sprintf('SE%i', exposureTime));
-    
-    % Throw away first measurement (inconsistant with all others for some reason)
+    % Throw away first measurement (can be inconsistant)
     [~] = sendAndRead(meter, 'M1', '%i,%i,%f', 4.0);
     
     table = zeros(length(vals),2);
